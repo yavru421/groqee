@@ -1,0 +1,44 @@
+**How to Get a Free Groq API Key**
+
+Groq is a powerful AI computing platform that provides fast and efficient processing of machine learning workloads. To use Groq's API, you need to create an account and obtain an API key. Here's a step-by-step guide on how to do it:
+
+**Step 1: Create a Groq Account**
+
+1. Go to [www.groq.com](http://www.groq.com) and click on "Sign Up" in the top right corner of the page.
+2. Fill out the registration form with your email address, password, and other details.
+3. Verify your email address by clicking on the link sent to you by Groq.
+
+**Step 2: Verify Your Account**
+
+1. Log in to your Groq account by clicking on "Log In" in the top right corner of the page.
+2. You will be redirected to the Groq dashboard. Click on your profile picture or initials in the top right corner, then click on "Account".
+3. You will see a verification banner on your account page. Click on "Verify Your Account" to start the verification process.
+4. Follow the instructions to verify your account. This may involve providing additional information or confirming your email address.
+
+**Step 3: Create an API Key**
+
+1. Once your account is verified, go back to the Groq dashboard.
+2. Click on your profile picture or initials in the top right corner, then click on "API Keys".
+3. Click on the "Create API Key" button.
+4. Choose a name for your API key and select the permissions you want to grant to the key.
+5. Click on "Create API Key" to generate the key.
+
+**Step 4: Retrieve Your API Key**
+
+1. After creating the API key, you will see it listed on the API Keys page.
+2. Click on the three dots next to the API key and select "View API Key".
+3. You will see your API key displayed. Copy it and store it securely.
+
+**Using Your API Key**
+
+1. You can now use your API key to authenticate with the Groq API.
+2. Include the API key in the `Authorization` header of your API requests, like this: `Authorization: Bearer YOUR_API_KEY`
+3. Replace `YOUR_API_KEY` with the actual API key you generated.
+
+**Tips and Reminders**
+
+* Keep your API key secure and do not share it with anyone.
+* You can create multiple API keys with different permissions for different use cases.
+* If you lose your API key, you can regenerate it, but you will need to update any code or applications that use the old key.
+
+By following these steps, you should be able to create a Groq account and obtain a free API key. If you have any issues or questions, feel free to contact Groq support.
