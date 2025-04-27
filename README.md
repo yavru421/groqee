@@ -4,3 +4,4 @@ The motivation behind Groqee is simple yet profound: to make AI accessible to fr
 
 This project is a testament to the belief that AI should empower everyone, regardless of their background or technical skills. Groqee is more than just a tool—it's a step toward democratizing AI and making it a part of everyday life.
 
+note: portable exe for download realese is in MASTER branch of groqee repo
