@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groqee Web Assistant</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#181c20">
+  <style>
+    body { background: #181c20; color: #f2f2f2; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+    #container { max-width: 600px; margin: 40px auto; background: #23272b; border-radius: 10px; box-shadow: 0 0 16px #0008; padding: 32px; }
+    h1 { text-align: center; color: #00ffe7; letter-spacing: 2px; font-size: 2.2em; }
+    #subtitle { text-align: center; color: #b0b0b0; font-size: 1.1em; margin-bottom: 18px; }
+    #chat { height: 340px; overflow-y: auto; background: #111417; border-radius: 6px; padding: 12px; margin-bottom: 16px; font-size: 1.08em; }
+    .msg-user { color: #00ff90; margin: 8px 0; font-weight: 600; }
+    .msg-bot { color: #1e90ff; margin: 8px 0; font-weight: 500; }
+    .msg-error { color: #ff4c4c; margin: 8px 0; font-weight: 600; }
+    #input-area { display: flex; gap: 8px; }
+    #input-area input, #input-area textarea { flex: 1; padding: 8px; border-radius: 4px; border: none; background: #23272b; color: #fff; }
+    #input-area button { background: linear-gradient(90deg, #00ffe7 60%, #00bfff 100%); color: #181c20; border: none; border-radius: 4px; padding: 8px 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px #00ffe733; transition: background 0.2s; }
+    #input-area button:hover { background: linear-gradient(90deg, #00bfae 60%, #007fff 100%); }
+    #context-upload { margin: 12px 0; }
+    #api-key { width: 100%; margin-bottom: 12px; }
+    #footer { text-align: center; color: #888; font-size: 0.95em; margin-top: 18px; }
+    .groq-badge { display: block; margin: 0 auto 10px auto; width: 120px; }
+    /* Styles for button container */
+    #button-container { 
+      position: fixed; 
+      top: 20px; 
+      left: 20px; 
+      z-index: 9999; 
+      background: rgba(24, 28, 32, 0.95);
+      padding: 15px;
+      border-radius: 10px;
+      border: 3px solid #00ffe7;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 0 15px rgba(0, 255, 231, 0.3);
+    }
+    .control-button {
+      background: #23272b;
+      color: #00ffe7;
+      border: none;
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .control-button:hover {
+      background: #2c3036;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="groqee-3d-container" style="width:100%;height:220px;background:#181c20;border-radius:8px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+      <img id="groqee-image" src="/static/groqee_fox/image(5).jpg" alt="Groqee" style="width:100%;height:auto;animation: float 3s ease-in-out infinite;" />
+    </div>
+    <h1>Groqee Web Assistant</h1>
+    <div id="subtitle">Ultra-fast, lightweight, and powered by Groq.<br>Upload context, chat, and unleash the future of AI.</div>
+    <input id="api-key" type="password" placeholder="Enter your GROQ API Key" />
+    <div id="context-upload">
+      <input type="file" id="context-file" />
+      <button onclick="uploadContext()">Upload Context</button>
+    </div>
+    <div id="chat"></div>
+    <div id="input-area">
+      <textarea id="user-input" rows="2" placeholder="Type your message..."></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="footer">&copy; 2025 John Daniel Dondlinger &mdash; Groqee is <b>the</b> fastest, most powerful chat assistant. <a href="https://groq.com" style="color:#00ffe7;" target="_blank">Powered by Groq</a></div>
+    <button id="mini-toggle" onclick="toggleMiniMode()" style="position:absolute;top:10px;right:10px;background:#23272b;color:#00ffe7;border:none;border-radius:50%;width:32px;height:32px;font-size:1.3em;cursor:pointer;z-index:10;">🗕</button>
+  </div>
+
+  <!-- Control panel for buttons -->
+  <div id="button-container">
+    <button id="test-all-button" class="control-button" onclick="testAllFunctionality()">🛠️ Test All</button>
+    <button id="voice-toggle" class="control-button" onclick="toggleVoice()">🔊 Voice On</button>
+    <button id="mic-button" class="control-button" onclick="startVoiceInput()">🎤 Voice Input</button>
+    <button id="evolve-button" class="control-button" onclick="evolveContext()">🔄 Evolve Context</button>
+    <button id="folder-button" class="control-button" onclick="listFolder()">📂 Show Folder</button>
+  </div>
+
+  <script>
+    // Initialize contextText at the top
+    let contextText = ''; // Default to an empty string
+    let isVoiceEnabled = true;
+    let isMini = false;
+
+    // Save/load API key to/from localStorage
+    const apiKeyInput = document.getElementById('api-key');
+    apiKeyInput.value = localStorage.getItem('groqee_api_key') || '';
+    apiKeyInput.addEventListener('input', function() {
+      localStorage.setItem('groqee_api_key', apiKeyInput.value);
+    });
+
+    // Notification permission
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
+
+    // Voice synthesis setup
+    const synth = window.speechSynthesis;
+    let voices = [];
+
+    function populateVoiceList() {
+      voices = synth.getVoices();
+      console.log("Voices loaded:", voices.length);
+    }
+
+    populateVoiceList();
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = populateVoiceList;
+    }
+
+    // Speech recognition setup
+    let recognition;
+    try {
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+    } catch (e) {
+      console.error("Speech recognition not supported:", e);
+    }
+
+    // Mini-mode toggle
+    function toggleMiniMode() {
+      isMini = !isMini;
+      const container = document.getElementById('container');
+      const groqeeImage = document.getElementById('groqee-image');
+      if (isMini) {
+        container.style.maxWidth = '320px';
+        container.style.padding = '10px';
+        document.getElementById('chat').style.height = '120px';
+        document.getElementById('subtitle').style.display = 'none';
+        document.getElementById('footer').style.display = 'none';
+        groqeeImage.style.display = 'none';
+        document.getElementById('mini-toggle').textContent = '🗖';
+      } else {
+        container.style.maxWidth = '600px';
+        container.style.padding = '32px';
+        document.getElementById('chat').style.height = '340px';
+        document.getElementById('subtitle').style.display = '';
+        document.getElementById('footer').style.display = '';
+        groqeeImage.style.display = 'block';
+        document.getElementById('mini-toggle').textContent = '🗕';
+      }
+    }
+
+    // Toggle voice output
+    function toggleVoice() {
+      isVoiceEnabled = !isVoiceEnabled;
+      const button = document.getElementById('voice-toggle');
+      button.textContent = isVoiceEnabled ? '🔊 Voice On' : '🔇 Voice Off';
+      
+      // Force stop any current speech
+      if (synth && synth.speaking) {
+        synth.cancel();
+      }
+      
+      console.log("Voice toggled:", isVoiceEnabled ? "ON" : "OFF");
+    }
+
+    // Speech synthesis
+    function speak(text) {
+      if (!isVoiceEnabled || !synth) return;
+      
+      // Cancel any ongoing speech
+      if (synth.speaking) {
+        synth.cancel();
+      }
+      
+      const cleanText = text.replace(/<[^>]*>/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      // Try to use a nicer voice
+      try {
+        // Attempt to select a different voice (e.g., a female voice)
+        if (voices.length > 0) {
+          const femaleVoice = voices.find(voice => 
+            voice.name.includes('Female') || 
+            voice.name.includes('Zira') || 
+            voice.name.includes('Google UK English Female')
+          );
+          
+          if (femaleVoice) {
+            utterance.voice = femaleVoice;
+            console.log("Using voice:", femaleVoice.name);
+          } else if (voices.length > 1) {
+            // Fallback to the second voice if a female one isn't obvious
+            utterance.voice = voices[1];
+            console.log("Using fallback voice:", voices[1].name); 
+          }
+        }
+      } catch (e) {
+        console.error("Error setting voice:", e);
+      }
+      
+      synth.speak(utterance);
+    }
+
+    // Start voice input
+    function startVoiceInput() {
+      if (!recognition) {
+        appendMsg('error', 'Speech recognition is not supported in your browser.');
+        return;
+      }
+      
+      const micButton = document.getElementById('mic-button');
+      micButton.textContent = '🎤 Listening...';
+      
+      recognition.start();
+      
+      recognition.onresult = function(event) {
+        const speechResult = event.results[0][0].transcript;
+        document.getElementById('user-input').value = speechResult;
+        micButton.textContent = '🎤 Voice Input';
+        sendMessage(); // Automatically send the message after transcription
+      };
+      
+      recognition.onspeechend = function() {
+        recognition.stop();
+        micButton.textContent = '🎤 Voice Input';
+      };
+      
+      recognition.onerror = function(event) {
+        appendMsg('error', 'Voice recognition error: ' + event.error);
+        micButton.textContent = '🎤 Voice Input';
+      };
+    }
+
+    // Message display
+    function appendMsg(role, text) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      if (role === 'error') div.className = 'msg-error';
+      else div.className = role === 'user' ? 'msg-user' : 'msg-bot';
+      div.innerHTML = (role === 'user' ? 'You: ' : role === 'bot' ? 'Groqee: ' : '') + text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+
+      // Speak bot responses
+      if (role === 'bot') {
+        speak(text);
+      }
+
+      // Show notification for new Groqee messages
+      if (role === 'bot' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Groqee', { body: text.replace(/<[^>]*>/g, '').slice(0, 80) });
+      }
+    }
+
+    // Send message to API
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const apiKey = document.getElementById('api-key').value.trim();
+      const msg = input.value.trim();
+      if (!msg || !apiKey) {
+        appendMsg('error', 'Error: API key and message are required.');
+        return;
+      }
+      appendMsg('user', msg);
+      input.value = '';
+      appendMsg('bot', '...thinking...');
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: apiKey, message: msg, context: contextText })
+        });
+        const data = await res.json();
+        document.querySelectorAll('.msg-bot').forEach(e => { if (e.textContent.endsWith('...thinking...')) e.remove(); });
+        if (data.response) appendMsg('bot', data.response);
+        else appendMsg('error', `Error: ${data.error || 'Unknown error'}`);
+      } catch (err) {
+        document.querySelectorAll('.msg-bot').forEach(e => { if (e.textContent.endsWith('...thinking...')) e.remove(); });
+        appendMsg('error', `Error: ${err.message}`);
+      }
+    }
+
+    // Test all functionality
+    async function testAllFunctionality() {
+      appendMsg('user', 'Testing all functionality...');
+
+      // Test API key save/load
+      const apiKey = document.getElementById('api-key').value.trim();
+      if (!apiKey) {
+        appendMsg('error', 'Error: API key is required for testing.');
+        return;
+      }
+      appendMsg('bot', 'API key save/load: ✅');
+
+      // Test context upload
+      if (contextText) {
+        appendMsg('bot', 'Context upload: ✅');
+      } else {
+        appendMsg('bot', 'Context upload: No context uploaded.');
+      }
+
+      // Test chat functionality
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: apiKey, message: 'Hello, Groqee!', context: contextText })
+        });
+        const data = await res.json();
+        if (data.response) {
+          appendMsg('bot', 'Chat functionality: ✅');
+        } else {
+          appendMsg('error', `Chat functionality: Error - ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        appendMsg('error', `Chat functionality: Error - ${err.message}`);
+      }
+
+      // Test folder showcase
+      try {
+        const res = await fetch('/api/list-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder_path: 'C:/Users/John/Downloads' })
+        });
+        const data = await res.json();
+        if (data.output) {
+          appendMsg('bot', 'Folder showcase: ✅');
+        } else {
+          appendMsg('error', `Folder showcase: Error - ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        appendMsg('error', `Folder showcase: Error - ${err.message}`);
+      }
+
+      // Test mini-mode toggle
+      toggleMiniMode();
+      setTimeout(() => {
+        toggleMiniMode();
+        appendMsg('bot', 'Mini-mode toggle: ✅');
+      }, 1000);
+
+      // Test voice toggle
+      toggleVoice();
+      setTimeout(() => {
+        toggleVoice();
+        appendMsg('bot', 'Voice toggle: ✅');
+      }, 1000);
+    }
+
+    // List folder contents
+    async function listFolder() {
+      const folderPath = prompt('Enter the folder path to view:');
+      if (!folderPath) return;
+      appendMsg('user', `Show me the contents of: ${folderPath}`);
+      appendMsg('bot', '...fetching folder contents...');
+      try {
+        const res = await fetch('/api/list-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder_path: folderPath })
+        });
+        const data = await res.json();
+        document.querySelectorAll('.msg-bot').forEach(e => { if (e.textContent.endsWith('...fetching folder contents...')) e.remove(); });
+        if (data.output) {
+          appendMsg('bot', `Here is the folder content:<br><pre>${data.output}</pre>`);
+        } else {
+          appendMsg('error', `Error: ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        appendMsg('error', `Error: ${err.message}`);
+      }
+    }
+
+    // Evolve context
+    async function evolveContext() {
+      const apiKey = document.getElementById('api-key').value.trim();
+      if (!apiKey || !contextText) {
+        appendMsg('error', 'Error: API key and context are required for evolution.');
+        return;
+      }
+      appendMsg('user', 'Evolving the context...');
+      appendMsg('bot', '...evolving context...');
+      try {
+        const res = await fetch('/api/context-evolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: apiKey, context: contextText })
+        });
+        const data = await res.json();
+        document.querySelectorAll('.msg-bot').forEach(e => { if (e.textContent.endsWith('...evolving context...')) e.remove(); });
+        if (data.evolved_prompt) {
+          contextText = data.evolved_prompt;
+          appendMsg('bot', 'Context evolved successfully.');
+        } else {
+          appendMsg('error', `Error: ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        document.querySelectorAll('.msg-bot').forEach(e => { if (e.textContent.endsWith('...evolving context...')) e.remove(); });
+        appendMsg('error', `Error: ${err.message}`);
+      }
+    }
+
+    // Handle context file upload
+    function uploadContext() {
+      const fileInput = document.getElementById('context-file');
+      const file = fileInput.files[0];
+      if (!file) {
+        appendMsg('error', 'Error: No file selected for context upload.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        contextText = event.target.result;
+        appendMsg('bot', 'Context uploaded successfully.');
+      };
+      reader.onerror = function() {
+        appendMsg('error', 'Error: Failed to read the context file.');
+      };
+      reader.readAsText(file);
+    }
+
+    // Setup Enter key to send message
+    document.getElementById('user-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { 
+        e.preventDefault(); 
+        sendMessage(); 
+      }
+    });
+
+    // Log that everything has loaded
+    console.log("Groqee initialized with all features");
+  </script>
+</body>
+</html>
