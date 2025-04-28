@@ -1,0 +1,16 @@
+{
+  "name": "Groqee Web Assistant",
+  "short_name": "Groqee",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#181c20",
+  "theme_color": "#181c20",
+  "description": "Ultra-fast, lightweight, and powered by Groq. Upload context, chat, and unleash the future of AI.",
+  "icons": [
+    {
+      "src": "https://groq.com/wp-content/uploads/2024/03/PBG-mark1-color.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
