@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>groqee2</id>
+    <version>1.0.0</version>
+    <title>Groqee Web Assistant</title>
+    <authors>John Daniel Dondlinger</authors>
+    <owners>John Daniel Dondlinger</owners>
+    <description>Groqee is an ultra-fast, lightweight web assistant powered by Groq.</description>
+    <summary>Groqee Web Assistant</summary>
+    <tags>groqee assistant</tags>
+    <projectUrl>https://example.com</projectUrl>
+    <licenseUrl>https://example.com/license</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+  <files>
+    <file src="start_groqee.bat" target="tools" />
+    <file src="dist/groqee2-1.0.0.tar.gz" target="tools" />
+  </files>
+</package>

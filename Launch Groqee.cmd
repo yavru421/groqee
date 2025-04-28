@@ -1,0 +1,12 @@
+off
+echo
+Starting
+Groqee...
+start
+http://127.0.0.1:5000
+timeout
+/t
+2
+cd
+dist
+app.exe

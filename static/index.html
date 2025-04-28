@@ -86,9 +86,53 @@
     <button id="mic-button" class="control-button" onclick="startVoiceInput()">🎤 Voice Input</button>
     <button id="evolve-button" class="control-button" onclick="evolveContext()">🔄 Evolve Context</button>
     <button id="folder-button" class="control-button" onclick="listFolder()">📂 Show Folder</button>
+    <button id="run-button" class="control-button" onclick="showRunCommandPopup()">▶️ Run Command</button>
+  </div>
+
+  <!-- Popup for entering PowerShell command -->
+  <div id="run-command-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#23272b; padding:20px; border-radius:10px; border:2px solid #00ffe7; z-index:1000;">
+    <h3 style="color:#00ffe7;">Run PowerShell Command</h3>
+    <textarea id="command-input" rows="4" style="width:100%; margin-bottom:10px; background:#181c20; color:#fff; border:none; border-radius:4px; padding:8px;" placeholder="Enter your PowerShell command..."></textarea>
+    <div style="display:flex; justify-content:space-between;">
+      <button onclick="runCommand()" style="background:#00ffe7; color:#181c20; border:none; border-radius:4px; padding:8px 16px; font-weight:bold; cursor:pointer;">Run</button>
+      <button onclick="closeRunCommandPopup()" style="background:#ff4c4c; color:#fff; border:none; border-radius:4px; padding:8px 16px; font-weight:bold; cursor:pointer;">Cancel</button>
+    </div>
   </div>
 
   <script>
+    function showRunCommandPopup() {
+      document.getElementById('run-command-popup').style.display = 'block';
+    }
+
+    function closeRunCommandPopup() {
+      document.getElementById('run-command-popup').style.display = 'none';
+    }
+
+    async function runCommand() {
+      const command = document.getElementById('command-input').value.trim();
+      if (!command) {
+        alert('Please enter a command to run.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/run-command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command })
+        });
+        const data = await res.json();
+        if (data.output) {
+          alert(`Command Output:\n${data.output}`);
+        } else {
+          alert(`Error: ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      } finally {
+        closeRunCommandPopup();
+      }
+    }
+
     // Initialize contextText at the top
     let contextText = ''; // Default to an empty string
     let isVoiceEnabled = true;

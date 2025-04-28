@@ -1,49 +1,38 @@
-# Groqee Web Assistant
+# Groqee 2
 
-Groqee is an ultra-fast, lightweight, and highly adaptable AI assistant created by John Daniel Dondlinger. This project includes a Flask-based web application and a standalone `.exe` for easy distribution.
+Groqee 2 is an ultra-fast, lightweight web assistant powered by Groq. This package is designed to simplify your workflow and enhance productivity.
 
-## Features
-- Chat with Groqee using a web interface.
-- Upload context files to enhance responses.
-- Test all functionalities with a single button.
-- Toggle voice output and use voice input (if supported by the browser).
-- Evolve the assistant's context dynamically.
+## Installation
 
-## Running the Application
+### Prerequisites
+- **Python**: Ensure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/).
+- **Chocolatey** (optional): Groqee 2 will soon be available on Chocolatey for easy installation.
 
-### Using the Standalone `.exe`
-1. Navigate to the `dist/` folder.
-2. Run `app.exe`.
-3. Open your browser and go to `http://127.0.0.1:5000`.
-
-### Using Python
-1. Install dependencies:
+### Steps to Install
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd groqee_2
+   ```
+2. Install the required Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Run the Flask application:
+3. Run the application:
    ```bash
    python app.py
    ```
-3. Open your browser and go to `http://127.0.0.1:5000`.
 
-## Project Structure
-- `app.py`: Main Flask application.
-- `static/`: Contains static files (HTML, CSS, JS, images).
-- `dist/`: Contains the standalone `.exe` file.
-- `README.md`: Project documentation.
-- `requirements.txt`: Python dependencies.
+### Chocolatey Installation (Coming Soon)
+Groqee 2 will be available on Chocolatey within a day or so. Once published, you can install it using:
+```bash
+choco install groqee2
+```
 
-## Preparing for Development
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the application as described above.
-
-## Contributing
-Feel free to submit issues or pull requests to improve the project.
+## Features
+- Lightweight and fast
+- Easy to use
+- Powered by Groq
 
 ## License
-This project is licensed under the MIT License.
+This project is licensed under the terms of the MIT license. See the `LICENSE.txt` file for details.

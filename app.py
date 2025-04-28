@@ -4,14 +4,30 @@ import os
 import requests
 import json
 import subprocess
-from evolution_log import log_evolution
+import webbrowser
+import threading
+import time
+import sys
+
+# Get the absolute path to the static folder
+current_dir = os.path.dirname(os.path.abspath(__file__))
+static_folder_path = os.path.join(current_dir, 'static')
+
+# Create Flask app with static folder configuration
+app = Flask(__name__, static_folder=static_folder_path, static_url_path='/static')
+CORS(app)
 
 PROMPT_TUNER_FILE = 'jdss_prompt_tuner.json'
 
-app = Flask(__name__, static_folder='static')
-CORS(app)
-
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+# Serve index.html from root directory
+@app.route('/')
+def index():
+    return send_from_directory(current_dir, 'index.html')
+
+# Let Flask handle all static files under '/static/' automatically
+# No custom route for static files is needed.
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -110,14 +126,20 @@ def list_folder():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_frontend(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, 'index.html')
-
-app.add_url_rule('/static/sw.js', 'service_worker', lambda: send_from_directory(app.static_folder, 'sw.js'))
+@app.route('/api/run-command', methods=['POST'])
+def run_command():
+    data = request.json
+    command = data.get('command')
+    if not command:
+        return jsonify({'error': 'Command is required.'}), 400
+    try:
+        # Execute the PowerShell command
+        result = subprocess.run(f'powershell -Command "{command}"', shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            return jsonify({'error': result.stderr.strip()}), 500
+        return jsonify({'output': result.stdout.strip()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def self_check():
     checks = []
@@ -140,21 +162,11 @@ def self_check():
         import requests
     except ImportError as e:
         checks.append(f"Missing required package: {e}")
-    # Check API key (try a dry run to Groq API)
-    api_key = os.environ.get('GROQ_API_KEY')
-    if not api_key:
-        checks.append("GROQ_API_KEY environment variable not set.")
-    else:
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        payload = {"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": "ping"}]}
-        try:
-            resp = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=10)
-            if resp.status_code == 401:
-                checks.append("Groq API key is invalid or unauthorized.")
-            elif resp.status_code != 200:
-                checks.append(f"Groq API returned status {resp.status_code}: {resp.text}")
-        except Exception as e:
-            checks.append(f"Groq API connection failed: {e}")
+    
+    # NO LONGER CHECK API KEY - Users will input it in the UI
+    # Add a note for developers about API key expectations
+    print("Note: GROQ_API_KEY environment variable check skipped. Users will enter API key in the web interface.")
+    
     # Check logging
     try:
         from evolution_log import log_evolution
@@ -178,6 +190,25 @@ if __name__ == '__main__':
         for err in errors:
             print(f"- {err}")
         print("\nGroqee will not start until all issues are resolved.")
-        exit(1)
+        sys.exit(1)
+    
     print("Groqee self-check passed. Starting server...")
-    app.run(debug=True)
+    print(f"Static folder: {app.static_folder}")
+    print(f"Static URL path: {app.static_url_path}")
+    
+    # Function to open browser after a delay
+    def open_browser():
+        try:
+            # Give the server time to start
+            time.sleep(2)
+            webbrowser.open('http://127.0.0.1:5000/')
+            print("Browser opened successfully")
+        except Exception as e:
+            print(f"Could not open browser: {e}")
+            print("Please open http://127.0.0.1:5000/ manually in your browser")
+    
+    # Start browser opening in a separate thread
+    threading.Thread(target=open_browser, daemon=True).start()
+    
+    # Run the Flask app
+    app.run(host='127.0.0.1', port=5000, threaded=True)
