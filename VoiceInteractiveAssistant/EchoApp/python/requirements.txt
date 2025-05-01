@@ -1,0 +1,10 @@
+requests>=2.32.3
+pygame>=2.6.1
+SpeechRecognition>=3.14.2
+pyttsx3>=2.98
+PyAudio>=0.2.13
+keyboard>=0.13.5 # Added for global hotkeys
+comtypes>=1.4.10  # Required by pyttsx3
+pypiwin32>=223    # Required by pyttsx3
+pywin32>=310      # Required by pyttsx3
+typing-extensions>=4.13.2  # Required by SpeechRecognition

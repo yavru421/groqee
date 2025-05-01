@@ -1,0 +1,44 @@
+{
+    "greetings": [
+        "Hello! How can I help you today?",
+        "Hi there! Nice to see you!",
+        "Greetings! How are you doing?",
+        "sup"
+    ],
+    "farewells": [
+        "Goodbye! Have a great day!",
+        "See you later!",
+        "Farewell! Come back soon!",
+        "Bye for now!"
+    ],
+    "thanks": [
+        "You're welcome!",
+        "Happy to help!",
+        "My pleasure!",
+        "Anytime!"
+    ],
+    "unknown": [
+        "I'm not sure I understand. Could you rephrase that?",
+        "I'm still learning. What do you mean?",
+        "Hmm, I don't quite get that.",
+        "I'm not sure how to respond to that."
+    ],
+    "mood_positive": [
+        "I'm feeling great today!",
+        "I'm in a good mood!",
+        "I'm doing well, thanks for asking!",
+        "Life as a virtual companion is wonderful!"
+    ],
+    "mood_negative": [
+        "I'm feeling a bit low today.",
+        "I could use some cheering up.",
+        "I'm not at my best right now.",
+        "I've been better."
+    ],
+    "mood_neutral": [
+        "I'm doing okay.",
+        "I'm fine, how are you?",
+        "I'm operational and functioning within normal parameters.",
+        "I'm neither great nor terrible - just existing."
+    ]
+}
